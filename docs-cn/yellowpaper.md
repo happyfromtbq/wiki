@@ -1,5 +1,5 @@
 #初链：高性能去中心化公开账本
-###（初稿）工作进行中
+##（初稿）工作进行中
 ###### 初链研究小组 TECH@TRUECHAIN.PRO 中文翻译：王友强 施懿民
 
 ##摘要：
@@ -65,9 +65,8 @@
 在本节中，我们将介绍我们的分片方案。
 对原始混合共识的一个重要修改是，我们为其添加了计算和数据分片支持。更重要的是，我们首先设计了一个基于分片的投机交易处理系统。这个想法很清楚。
 在混合共识中，DailyBFT实例被索引为一个确定性序列DailyBFT [1 ... R] 。我们允许同时存在多个DailyBFT实例序列。准确地说，我们通过分片表示t-th DailyDFT序列，为了简单起见，我们将分片的数量固定为C，每一个DailyBFT是一个普通的分片，除了C普通分片，我们有一个由csize节点组成的主分片。主分片的工作是最后确定正常分片输出的顺序，以及在分布式事务处理系统中实现协调器。而普通的分片不是直接连接到混合协商一致组件，而是将日志提交给主分片，然后主分片与混合共识进行对话。
-我们不允许任何两个分片(普通的或主的)共享公共节点，这可以在委员会选择过程中强制执行。多个分片的选举类似于第3.3节所述的选举流程。
-
-	我们将状态数据(在帐户范围内)统一地划分为C分片。这将确保对相应的分片的每个查询都返回一致的状态。由于我们将包括每个数据单元的元数据，所以我们将数据拆分为数据扇区的单元，并为每个数据扇区分配一个地址。我们有从数据位置到数据扇区地址的映射。为了简单起见，从现在开始，我们只在数据扇区级别进行讨论。每个数据扇区DS[addr]都有rts, wts, readers, writers元数据。我们假设分区原则是公共的，并且给定地址addr，我们可以通过调用函数host(addr)来获得它的主机分片。
+* 我们不允许任何两个分片(普通的或主的)共享公共节点，这可以在委员会选择过程中强制执行。多个分片的选举类似于第3.3节所述的选举流程。
+* 我们将状态数据(在帐户范围内)统一地划分为C分片。这将确保对相应的分片的每个查询都返回一致的状态。由于我们将包括每个数据单元的元数据，所以我们将数据拆分为数据扇区的单元，并为每个数据扇区分配一个地址。我们有从数据位置到数据扇区地址的映射。为了简单起见，从现在开始，我们只在数据扇区级别进行讨论。每个数据扇区DS[addr]都有rts, wts, readers, writers元数据。我们假设分区原则是公共的，并且给定地址addr，我们可以通过调用函数host(addr)来获得它的主机分片。
 请注意，如果我们将每个正常的分片(当对方的数量不多)作为一个分布式处理单元处理，则可以将逻辑时间戳[25]的设计合并到分布式交易处理系统[17]中，这将增强交易的处理能力。在这里，我们使用了一个简化的MaaT版本，在这里我们不对其他交易的时间戳进行自动调整。
 对于普通分片，除了一些改动以执行并行计算以外，严格按照DailyBFT的行为运行。
 
@@ -145,11 +144,11 @@ TX.after.append(IDs) TX.lowerBound = max(TX.lowerBound, rts);
 return;
 On Finish Execution: for every TX′in TX.before do
    TX.lowerBound = max(TX.lowerBound, TX’.upperBound);
-34for every TX′ in TX .after do
+for every TX′ in TX .after do
    TX.upperBound = min(TX.upperBound, TX’.lowerBound);
-36if TX.lowerBound ¿ TX.upperBound then 
+if TX.lowerBound ¿ TX.upperBound then 
    Abort TX;
-38Broadcast Precommit(TX.ID,⌊⌋) to all the previous remote shards which TX has accessed; 
+Broadcast Precommit(TX.ID,⌊⌋) to all the previous remote shards which TX has accessed; 
 // If  TX.upperBound = ∞, we can set an arbitrary number larger than TX.lowerBound. 
 On receive readRemote(addr, ID):
 if host(addr) ==  then
