@@ -168,24 +168,25 @@ else
 
 图2 用于分片和投机交易处理的伪代码
 算法3：分片和投机交易处理续
-1On receive Precommit(ID, cts)
-2Look up TX by ID;
-3if Found and cts not in [TX.lowerBound, TX.upperBound] then
-4   Broadcast Abort(ID) to the sender’s shard.;
-5TX.lowerBound = TX.upperBound = cts;
-6For every data sector DS [addr ] TX reads, set DS [addr ].rts = max (DS [addr ].rts , cts );
-7For every data sector DS [addr ] TX writes, set DS [addr ].wts = max (DS [addr ].wts , cts );
-8Broadcast Commit(ID, batchCounter)to the sender’s shard.;
+```js
+On receive Precommit(ID, cts)
+Look up TX by ID;
+if Found and cts not in [TX.lowerBound, TX.upperBound] then
+   Broadcast Abort(ID) to the sender’s shard.;
+TX.lowerBound = TX.upperBound = cts;
+For every data sector DS [addr ] TX reads, set DS [addr ].rts = max (DS [addr ].rts , cts );
+For every data sector DS [addr ] TX writes, set DS [addr ].wts = max (DS [addr ].wts , cts );
+Broadcast Commit(ID, batchCounter)to the sender’s shard.;
        // batchCounter is a number which increases by 1 whenever the shard submit a batch of log to the primary shard.
-9On receive 2f + 1 Commit(ID, batchCounter) from each remote shards which TX has accessed: 
-10TX.lowerBound = TX.upperBound = cts;
-11For every data sector DS [addr ] TX reads, set DS [addr ].rts = max (DS [addr ].rts , cts );
-12For every data sector DS [addr ] TX writes, set DS [addr ].wts = max (DS [addr ].wts , cts );
-13Mark TX committed;
-14Let TX .metadata = [ShardID , batchCounter ];
-15On output log
-16Sort TX’s based on their cts . Break ties by physical timestamp.
-
+On receive 2f + 1 Commit(ID, batchCounter) from each remote shards which TX has accessed: 
+TX.lowerBound = TX.upperBound = cts;
+For every data sector DS [addr ] TX reads, set DS [addr ].rts = max (DS [addr ].rts , cts );
+For every data sector DS [addr ] TX writes, set DS [addr ].wts = max (DS [addr ].wts , cts );
+Mark TX committed;
+Let TX .metadata = [ShardID , batchCounter ];
+On output log
+Sort TX’s based on their cts . Break ties by physical timestamp.
+```
 图3 用于分片和投机交易处理的伪代码（续）
 让我们在进一步研讨容器的场景。按照上面的论述，一个可行的解决方案是将容器应用在无服务器架构中。考虑有超过2000个的合约同时在线的并发请求场景，这时同时调用chaincode（活动窗口）的请求超过了MAX_CONTR的值，又会碰到相同的问题。因此，建议在最大并发请求上加上一个限流率的阈值。这样从共识基础上限制了每秒并发交易数。工程技术方面不是一个瓶颈。因此，我们依然选择EVM的设计，但做一些小的改动。
 
